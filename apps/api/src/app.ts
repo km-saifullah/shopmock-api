@@ -7,6 +7,7 @@ import pinoHttp from "pino-http";
 import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { healthRouter } from "./modules/health/health.routes";
 
 const app = express();
 
@@ -68,6 +69,8 @@ app.use(
     },
   }),
 );
+
+app.use("/health", healthRouter);
 
 app.use(errorMiddleware);
 
