@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src tests",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "seed:categories": "npm run build && node dist/scripts/seed-categories.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
