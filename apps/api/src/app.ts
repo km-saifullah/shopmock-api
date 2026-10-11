@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { healthRouter } from "./modules/health/health.routes";
+import { categoryRouter } from "./modules/mock/categories/category.routes";
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use(
 );
 
 app.use("/health", healthRouter);
+app.use(`${env.API_PREFIX}/categories`, categoryRouter);
 
 app.use(errorMiddleware);
 
