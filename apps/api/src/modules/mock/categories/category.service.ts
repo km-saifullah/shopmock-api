@@ -44,13 +44,13 @@ export async function listCategories(
     Category.countDocuments(filter).exec(),
   ]);
 
-  const categories = documents.map((document) => ({
+  const categories: CategoryResponse[] = documents.map((document) => ({
     id: document.id,
     name: document.name,
     slug: document.slug,
     description: document.description,
-    parentId: document.parentId,
-    image: document.image,
+    parentId: document.parentId ?? null,
+    image: document.image ?? null,
     isActive: document.isActive,
   }));
 
