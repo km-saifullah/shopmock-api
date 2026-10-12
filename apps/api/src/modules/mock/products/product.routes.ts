@@ -1,8 +1,12 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { listProducts } from "./product.service";
-import { productIdSchema, productListResponseSchema } from "./product.schema";
+import { getProductById, listProducts } from "./product.service";
+import {
+  productIdSchema,
+  productListResponseSchema,
+  productResponseSchema,
+} from "./product.schema";
 
 const productRouter = Router();
 
@@ -46,7 +50,6 @@ const productQuerySchema = z
 productRouter.get("/", async (req, res, next) => {
   try {
     const query = productQuerySchema.parse(req.query);
-
     const result = await listProducts(query);
 
     const response = productListResponseSchema.parse({
@@ -61,6 +64,34 @@ productRouter.get("/", async (req, res, next) => {
     });
 
     res.status(200).json(response);
+  } catch (error: unknown) {
+    next(error);
+  }
+});
+
+productRouter.get("/:id", async (req, res, next) => {
+  try {
+    const id = productIdSchema.parse(req.params.id);
+    const product = await getProductById(id);
+
+    if (!product) {
+      res.status(404).json({
+        success: false,
+        error: {
+          code: "PRODUCT_NOT_FOUND",
+          message: "The requested product was not found.",
+        },
+      });
+
+      return;
+    }
+
+    const response = productResponseSchema.parse(product);
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
   } catch (error: unknown) {
     next(error);
   }
