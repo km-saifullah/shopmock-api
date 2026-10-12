@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { listCategories } from "./category.service";
+import { getCategoryById, listCategories } from "./category.service";
 import {
   categoryIdSchema,
   categoryListResponseSchema,
+  categoryResponseSchema,
 } from "./category.schema";
 
 const categoryRouter = Router();
@@ -38,6 +39,34 @@ categoryRouter.get("/", async (req, res, next) => {
     });
 
     res.status(200).json(response);
+  } catch (error: unknown) {
+    next(error);
+  }
+});
+
+categoryRouter.get("/:id", async (req, res, next) => {
+  try {
+    const id = categoryIdSchema.parse(req.params.id);
+    const category = await getCategoryById(id);
+
+    if (!category) {
+      res.status(404).json({
+        success: false,
+        error: {
+          code: "CATEGORY_NOT_FOUND",
+          message: "The requested category was not found.",
+        },
+      });
+
+      return;
+    }
+
+    const response = categoryResponseSchema.parse(category);
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
   } catch (error: unknown) {
     next(error);
   }
