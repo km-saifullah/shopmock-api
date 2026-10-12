@@ -9,6 +9,7 @@ import { logger } from "./config/logger";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { healthRouter } from "./modules/health/health.routes";
 import { categoryRouter } from "./modules/mock/categories/category.routes";
+import { productRouter } from "./modules/mock/products/product.routes";
 
 const app = express();
 
@@ -72,7 +73,9 @@ app.use(
 );
 
 app.use("/health", healthRouter);
+
 app.use(`${env.API_PREFIX}/categories`, categoryRouter);
+app.use(`${env.API_PREFIX}/products`, productRouter);
 
 app.use(errorMiddleware);
 
