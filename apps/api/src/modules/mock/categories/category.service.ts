@@ -56,3 +56,29 @@ export async function listCategories(
 
   return { categories, total };
 }
+
+export async function getCategoryById(
+  id: string,
+): Promise<CategoryResponse | null> {
+  const document = await Category.findOne({
+    id,
+    isActive: true,
+  })
+    .select("-_id id name slug description parentId image isActive")
+    .lean()
+    .exec();
+
+  if (!document) {
+    return null;
+  }
+
+  return {
+    id: document.id,
+    name: document.name,
+    slug: document.slug,
+    description: document.description,
+    parentId: document.parentId ?? null,
+    image: document.image ?? null,
+    isActive: document.isActive,
+  };
+}
