@@ -1,5 +1,4 @@
 import type { FilterQuery } from "mongoose";
-
 import { Product } from "./product.model";
 import type { ProductDocument } from "./product.model";
 import type { ProductResponse } from "./product.schema";
@@ -19,6 +18,39 @@ export interface ListProductsResult {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+function toProductResponse(document: {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  currency: string;
+  categoryId: string;
+  brand?: string | null;
+  rating?: { average?: number; count?: number } | null;
+  stock: number;
+  thumbnail: string;
+  images: string[];
+  tags: string[];
+}): ProductResponse {
+  return {
+    id: document.id,
+    title: document.title,
+    description: document.description,
+    price: document.price,
+    currency: document.currency,
+    categoryId: document.categoryId,
+    brand: document.brand ?? null,
+    rating: {
+      average: document.rating?.average ?? 0,
+      count: document.rating?.count ?? 0,
+    },
+    stock: document.stock,
+    thumbnail: document.thumbnail,
+    images: document.images,
+    tags: document.tags,
+  };
 }
 
 export async function listProducts(
@@ -68,33 +100,28 @@ export async function listProducts(
     Product.countDocuments(filter).exec(),
   ]);
 
-  const products: ProductResponse[] = documents.map((document) => {
-    const rating = document.rating;
-
-    return {
-      id: document.id,
-      title: document.title,
-      description: document.description,
-      price: document.price,
-      currency: document.currency,
-      categoryId: document.categoryId,
-      brand: document.brand ?? null,
-      rating: {
-        average: rating?.average ?? 0,
-        count: rating?.count ?? 0,
-      },
-      stock: document.stock,
-      thumbnail: document.thumbnail,
-      images: document.images,
-      tags: document.tags,
-    };
-  });
-
   return {
-    products,
+    products: documents.map(toProductResponse),
     total,
     page,
     limit,
     totalPages: Math.ceil(total / limit),
   };
+}
+
+export async function getProductById(
+  id: string,
+): Promise<ProductResponse | null> {
+  const document = await Product.findOne({ id })
+    .select(
+      "-_id id title description price currency categoryId brand rating stock thumbnail images tags",
+    )
+    .lean()
+    .exec();
+
+  if (!document) {
+    return null;
+  }
+
+  return toProductResponse(document);
 }
