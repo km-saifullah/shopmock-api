@@ -119,6 +119,68 @@ describe("Product service", () => {
     expect(result.products[0]?.id).toBe("prod_headphones");
   });
 
+  it("sorts products by price in ascending order", async () => {
+    const result = await listProducts({
+      sortBy: "price",
+      order: "asc",
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_shirt",
+      "prod_headphones",
+      "prod_watch",
+    ]);
+  });
+
+  it("sorts products by price in descending order", async () => {
+    const result = await listProducts({
+      sortBy: "price",
+      order: "desc",
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_watch",
+      "prod_headphones",
+      "prod_shirt",
+    ]);
+  });
+
+  it("sorts products by rating in descending order", async () => {
+    const result = await listProducts({
+      sortBy: "rating",
+      order: "desc",
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_headphones",
+      "prod_watch",
+      "prod_shirt",
+    ]);
+  });
+
+  it("sorts products by title in ascending order", async () => {
+    const result = await listProducts({
+      sortBy: "title",
+      order: "asc",
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_shirt",
+      "prod_headphones",
+      "prod_watch",
+    ]);
+  });
+
+  it("sorts products by ID in ascending order by default", async () => {
+    const result = await listProducts();
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_headphones",
+      "prod_shirt",
+      "prod_watch",
+    ]);
+  });
+
   it("returns a product by ID", async () => {
     const product = await getProductById("prod_headphones");
 
