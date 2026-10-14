@@ -19,6 +19,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/product.service.test.ts"],
   "exclude": ["node_modules", "dist", "tests"]
 }

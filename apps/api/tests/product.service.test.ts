@@ -1,8 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { connectMongoDB, disconnectMongoDB } from "../../../database/mongodb";
-import { Product } from "./product.model";
-import { getProductById, listProducts } from "./product.service";
+import { connectMongoDB, disconnectMongoDB } from "../src/database/mongodb";
+import { Product } from "../src/modules/mock/products/product.model";
+import {
+  getProductById,
+  listProducts,
+} from "../src/modules/mock/products/product.service";
 
 describe("Product service", () => {
   beforeAll(async () => {

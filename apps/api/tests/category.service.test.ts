@@ -1,9 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import mongoose from "mongoose";
 
-import { connectMongoDB, disconnectMongoDB } from "../../../database/mongodb";
-import { Category } from "./category.model";
-import { getCategoryById, listCategories } from "./category.service";
+import { connectMongoDB, disconnectMongoDB } from "../src/database/mongodb";
+import { Category } from "../src/modules/mock/categories/category.model";
+import {
+  getCategoryById,
+  listCategories,
+} from "../src/modules/mock/categories/category.service";
 
 describe("Category service", () => {
   beforeAll(async () => {

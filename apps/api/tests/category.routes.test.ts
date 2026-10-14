@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
 
-import { app } from "../../../app";
-import { connectMongoDB, disconnectMongoDB } from "../../../database/mongodb";
-import { Category } from "./category.model";
+import { app } from "../src/app";
+import { connectMongoDB, disconnectMongoDB } from "../src/database/mongodb";
+import { Category } from "../src/modules/mock/categories/category.model";
 
 describe("Category routes", () => {
   beforeAll(async () => {
