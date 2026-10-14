@@ -115,6 +115,66 @@ describe("Product routes", () => {
     expect(response.body.data[0].id).toBe("prod_headphones");
   });
 
+  it("sorts products by price in ascending order", async () => {
+    const response = await request(app).get(
+      "/v1/products?sortBy=price&order=asc",
+    );
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.map((product: { id: string }) => product.id),
+    ).toEqual(["prod_shirt", "prod_headphones", "prod_watch"]);
+  });
+
+  it("sorts products by price in descending order", async () => {
+    const response = await request(app).get(
+      "/v1/products?sortBy=price&order=desc",
+    );
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.map((product: { id: string }) => product.id),
+    ).toEqual(["prod_watch", "prod_headphones", "prod_shirt"]);
+  });
+
+  it("sorts products by rating in descending order", async () => {
+    const response = await request(app).get(
+      "/v1/products?sortBy=rating&order=desc",
+    );
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.map((product: { id: string }) => product.id),
+    ).toEqual(["prod_headphones", "prod_watch", "prod_shirt"]);
+  });
+
+  it("sorts products by title in ascending order", async () => {
+    const response = await request(app).get(
+      "/v1/products?sortBy=title&order=asc",
+    );
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.map((product: { id: string }) => product.id),
+    ).toEqual(["prod_shirt", "prod_headphones", "prod_watch"]);
+  });
+
+  it("rejects an invalid sorting field", async () => {
+    const response = await request(app).get("/v1/products?sortBy=invalid");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects an invalid sorting direction", async () => {
+    const response = await request(app).get("/v1/products?order=sideways");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("returns a product by ID", async () => {
     const response = await request(app).get("/v1/products/prod_headphones");
 
