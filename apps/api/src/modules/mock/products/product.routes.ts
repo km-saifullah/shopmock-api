@@ -1,28 +1,20 @@
 import { Router } from "express";
-import { z } from "zod";
+import { ZodError, z } from "zod";
 
 import { getProductById, listProducts } from "./product.service";
-import {
-  productIdSchema,
-  productListResponseSchema,
-  productResponseSchema,
-} from "./product.schema";
 
 const productRouter = Router();
 
-const productQuerySchema = z
+const listProductsQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
-
     limit: z.coerce.number().int().min(1).max(100).default(20),
-
-    categoryId: z.string().optional(),
-
+    categoryId: z.string().trim().min(1).optional(),
     minPrice: z.coerce.number().min(0).optional(),
-
     maxPrice: z.coerce.number().min(0).optional(),
-
-    search: z.string().trim().max(100).optional(),
+    search: z.string().trim().min(1).max(100).optional(),
+    sortBy: z.enum(["price", "title", "rating", "id"]).default("id"),
+    order: z.enum(["asc", "desc"]).default("asc"),
   })
   .refine(
     (query) =>
@@ -33,26 +25,24 @@ const productQuerySchema = z
       message: "minPrice cannot be greater than maxPrice.",
       path: ["minPrice"],
     },
-  )
-  .superRefine((query, context) => {
-    if (
-      query.categoryId !== undefined &&
-      !/^cat_[a-zA-Z0-9_-]+$/.test(query.categoryId)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["categoryId"],
-        message: "Invalid category ID.",
-      });
-    }
-  });
+  );
 
 productRouter.get("/", async (req, res, next) => {
   try {
-    const query = productQuerySchema.parse(req.query);
-    const result = await listProducts(query);
+    const query = listProductsQuerySchema.parse(req.query);
 
-    const response = productListResponseSchema.parse({
+    const result = await listProducts({
+      page: query.page,
+      limit: query.limit,
+      categoryId: query.categoryId,
+      minPrice: query.minPrice,
+      maxPrice: query.maxPrice,
+      search: query.search,
+      sortBy: query.sortBy,
+      order: query.order,
+    });
+
+    res.status(200).json({
       success: true,
       data: result.products,
       meta: {
@@ -62,16 +52,35 @@ productRouter.get("/", async (req, res, next) => {
         totalPages: result.totalPages,
       },
     });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid product query parameters.",
+          details: error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+      });
 
-    res.status(200).json(response);
-  } catch (error: unknown) {
+      return;
+    }
+
     next(error);
   }
 });
 
 productRouter.get("/:id", async (req, res, next) => {
   try {
-    const id = productIdSchema.parse(req.params.id);
+    const idSchema = z
+      .string()
+      .trim()
+      .regex(/^prod_[a-zA-Z0-9_-]+$/);
+    const id = idSchema.parse(req.params.id);
+
     const product = await getProductById(id);
 
     if (!product) {
@@ -86,13 +95,27 @@ productRouter.get("/:id", async (req, res, next) => {
       return;
     }
 
-    const response = productResponseSchema.parse(product);
-
     res.status(200).json({
       success: true,
-      data: response,
+      data: product,
     });
-  } catch (error: unknown) {
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid product ID.",
+          details: error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+      });
+
+      return;
+    }
+
     next(error);
   }
 });
