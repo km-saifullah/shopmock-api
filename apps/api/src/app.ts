@@ -77,6 +77,18 @@ app.use("/health", healthRouter);
 app.use(`${env.API_PREFIX}/categories`, categoryRouter);
 app.use(`${env.API_PREFIX}/products`, productRouter);
 
+// Return consistent JSON for requests that do not match any route
+app.use((_req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: "ROUTE_NOT_FOUND",
+      message: "The requested endpoint does not exist.",
+    },
+  });
+});
+
+// Error handling must remain after all routes and the 404 handler
 app.use(errorMiddleware);
 
 export { app };
