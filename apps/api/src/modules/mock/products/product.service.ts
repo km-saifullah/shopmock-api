@@ -1,7 +1,11 @@
-import type { FilterQuery } from "mongoose";
+import type { FilterQuery, SortOrder } from "mongoose";
+
 import { Product } from "./product.model";
 import type { ProductDocument } from "./product.model";
 import type { ProductResponse } from "./product.schema";
+
+export type ProductSortField = "price" | "title" | "rating" | "id";
+export type SortDirection = "asc" | "desc";
 
 export interface ListProductsOptions {
   page?: number;
@@ -10,6 +14,8 @@ export interface ListProductsOptions {
   minPrice?: number;
   maxPrice?: number;
   search?: string;
+  sortBy?: ProductSortField;
+  order?: SortDirection;
 }
 
 export interface ListProductsResult {
@@ -59,6 +65,8 @@ export async function listProducts(
   const page = options.page ?? 1;
   const limit = options.limit ?? 20;
   const skip = (page - 1) * limit;
+  const direction: SortOrder = options.order === "desc" ? -1 : 1;
+  const sortBy = options.sortBy ?? "id";
 
   const filter: FilterQuery<ProductDocument> = {};
 
@@ -86,12 +94,17 @@ export async function listProducts(
     ];
   }
 
+  const sort: Record<string, SortOrder> =
+    sortBy === "rating"
+      ? { "rating.average": direction, id: 1 }
+      : { [sortBy]: direction, id: 1 };
+
   const [documents, total] = await Promise.all([
     Product.find(filter)
       .select(
         "-_id id title description price currency categoryId brand rating stock thumbnail images tags",
       )
-      .sort({ id: 1 })
+      .sort(sort)
       .skip(skip)
       .limit(limit)
       .lean()
@@ -119,9 +132,5 @@ export async function getProductById(
     .lean()
     .exec();
 
-  if (!document) {
-    return null;
-  }
-
-  return toProductResponse(document);
+  return document ? toProductResponse(document) : null;
 }
