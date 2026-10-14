@@ -1,11 +1,14 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
-import { logger } from "../config/logger";
+
 import { env } from "../config/env";
+import { logger } from "../config/logger";
 
 interface HttpError extends Error {
   statusCode?: number;
+  status?: number;
   code?: string;
+  type?: string;
 }
 
 export const errorMiddleware: ErrorRequestHandler = (
@@ -14,6 +17,10 @@ export const errorMiddleware: ErrorRequestHandler = (
   res,
   _next,
 ) => {
+  if (res.headersSent) {
+    return;
+  }
+
   if (error instanceof ZodError) {
     res.status(400).json({
       success: false,
@@ -32,7 +39,33 @@ export const errorMiddleware: ErrorRequestHandler = (
 
   const httpError = error instanceof Error ? (error as HttpError) : undefined;
 
-  const requestedStatus = httpError?.statusCode;
+  // Express body-parser errors for malformed or oversized JSON
+  if (httpError?.type === "entity.parse.failed") {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: "INVALID_JSON",
+        message: "The request body contains invalid JSON.",
+      },
+    });
+
+    return;
+  }
+
+  if (httpError?.type === "entity.too.large") {
+    res.status(413).json({
+      success: false,
+      error: {
+        code: "PAYLOAD_TOO_LARGE",
+        message: "The request body exceeds the allowed size.",
+      },
+    });
+
+    return;
+  }
+
+  const requestedStatus = httpError?.statusCode ?? httpError?.status;
+
   const statusCode =
     typeof requestedStatus === "number" &&
     Number.isInteger(requestedStatus) &&
