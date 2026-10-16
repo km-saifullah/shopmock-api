@@ -71,6 +71,9 @@ describe("Product routes", () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(3);
     expect(response.body.meta.total).toBe(3);
+    expect(response.body.meta.page).toBe(1);
+    expect(response.body.meta.limit).toBe(20);
+    expect(response.body.meta.totalPages).toBe(1);
   });
 
   it("supports pagination", async () => {
@@ -79,7 +82,33 @@ describe("Product routes", () => {
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(2);
     expect(response.body.meta.total).toBe(3);
+    expect(response.body.meta.page).toBe(1);
+    expect(response.body.meta.limit).toBe(2);
     expect(response.body.meta.totalPages).toBe(2);
+  });
+
+  it("rejects an invalid page number", async () => {
+    const response = await request(app).get("/v1/products?page=0");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects a zero product limit", async () => {
+    const response = await request(app).get("/v1/products?limit=0");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects a product limit greater than 100", async () => {
+    const response = await request(app).get("/v1/products?limit=101");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("filters products by category", async () => {
@@ -115,6 +144,27 @@ describe("Product routes", () => {
     expect(response.body.data[0].id).toBe("prod_headphones");
   });
 
+  it("returns an empty list when a search has no matches", async () => {
+    const response = await request(app).get(
+      "/v1/products?search=nonexistentproduct",
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual([]);
+    expect(response.body.meta.total).toBe(0);
+    expect(response.body.meta.totalPages).toBe(0);
+  });
+
+  it("sorts products by ID in ascending order by default", async () => {
+    const response = await request(app).get("/v1/products");
+
+    expect(response.status).toBe(200);
+    expect(
+      response.body.data.map((product: { id: string }) => product.id),
+    ).toEqual(["prod_headphones", "prod_shirt", "prod_watch"]);
+  });
+
   it("sorts products by price in ascending order", async () => {
     const response = await request(app).get(
       "/v1/products?sortBy=price&order=asc",
@@ -147,17 +197,6 @@ describe("Product routes", () => {
       response.body.data.map((product: { id: string }) => product.id),
     ).toEqual(["prod_headphones", "prod_watch", "prod_shirt"]);
   });
-
-  // it("sorts products by title in ascending order", async () => {
-  //   const response = await request(app).get(
-  //     "/v1/products?sortBy=title&order=asc",
-  //   );
-
-  //   expect(response.status).toBe(200);
-  //   expect(
-  //     response.body.data.map((product: { id: string }) => product.id),
-  //   ).toEqual(["prod_shirt", "prod_headphones", "prod_watch"]);
-  // });
 
   it("sorts products by title in ascending order", async () => {
     const response = await request(app).get(
@@ -198,6 +237,7 @@ describe("Product routes", () => {
     const response = await request(app).get("/v1/products/prod_missing");
 
     expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe("PRODUCT_NOT_FOUND");
   });
 
@@ -206,6 +246,7 @@ describe("Product routes", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("rejects an invalid price range", async () => {
@@ -215,5 +256,6 @@ describe("Product routes", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 });
