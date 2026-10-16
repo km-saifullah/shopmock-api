@@ -1,17 +1,9 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import mongoose from "mongoose";
 
 import { app } from "../src/app";
-import { connectMongoDB, disconnectMongoDB } from "../src/database/mongodb";
+import { disconnectMongoDB } from "../src/database/mongodb";
 
 describe("Health routes", () => {
   afterEach(() => {
@@ -46,7 +38,7 @@ describe("Health routes", () => {
     });
 
     it("returns 200 when MongoDB is connected", async () => {
-      await connectMongoDB();
+      vi.spyOn(mongoose.connection, "readyState", "get").mockReturnValue(1);
 
       const response = await request(app).get("/health/ready");
 

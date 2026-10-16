@@ -3,9 +3,11 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
+import swaggerUi from "swagger-ui-express";
 
 import { env } from "./config/env";
 import { logger } from "./config/logger";
+import { openApiSpecification } from "./config/openapi";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { healthRouter } from "./modules/health/health.routes";
 import { categoryRouter } from "./modules/mock/categories/category.routes";
@@ -52,6 +54,23 @@ app.use(
   express.json({
     limit: "100kb",
     strict: true,
+  }),
+);
+
+// OpenAPI documentation endpoints
+app.get("/docs.json", (_req, res) => {
+  res.status(200).json(openApiSpecification);
+});
+
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpecification, {
+    explorer: true,
+    customSiteTitle: "ShopMock API Documentation",
+    swaggerOptions: {
+      persistAuthorization: false,
+    },
   }),
 );
 
