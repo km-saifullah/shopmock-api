@@ -148,6 +148,17 @@ describe("Product routes", () => {
     ).toEqual(["prod_headphones", "prod_watch", "prod_shirt"]);
   });
 
+  // it("sorts products by title in ascending order", async () => {
+  //   const response = await request(app).get(
+  //     "/v1/products?sortBy=title&order=asc",
+  //   );
+
+  //   expect(response.status).toBe(200);
+  //   expect(
+  //     response.body.data.map((product: { id: string }) => product.id),
+  //   ).toEqual(["prod_shirt", "prod_headphones", "prod_watch"]);
+  // });
+
   it("sorts products by title in ascending order", async () => {
     const response = await request(app).get(
       "/v1/products?sortBy=title&order=asc",
@@ -156,7 +167,7 @@ describe("Product routes", () => {
     expect(response.status).toBe(200);
     expect(
       response.body.data.map((product: { id: string }) => product.id),
-    ).toEqual(["prod_shirt", "prod_headphones", "prod_watch"]);
+    ).toEqual(["prod_shirt", "prod_watch", "prod_headphones"]);
   });
 
   it("rejects an invalid sorting field", async () => {

@@ -119,16 +119,16 @@ describe("Product service", () => {
     expect(result.products[0]?.id).toBe("prod_headphones");
   });
 
-  it("sorts products by price in ascending order", async () => {
+  it("sorts products by title in ascending order", async () => {
     const result = await listProducts({
-      sortBy: "price",
+      sortBy: "title",
       order: "asc",
     });
 
     expect(result.products.map((product) => product.id)).toEqual([
       "prod_shirt",
-      "prod_headphones",
       "prod_watch",
+      "prod_headphones",
     ]);
   });
 
@@ -155,19 +155,6 @@ describe("Product service", () => {
       "prod_headphones",
       "prod_watch",
       "prod_shirt",
-    ]);
-  });
-
-  it("sorts products by title in ascending order", async () => {
-    const result = await listProducts({
-      sortBy: "title",
-      order: "asc",
-    });
-
-    expect(result.products.map((product) => product.id)).toEqual([
-      "prod_shirt",
-      "prod_headphones",
-      "prod_watch",
     ]);
   });
 

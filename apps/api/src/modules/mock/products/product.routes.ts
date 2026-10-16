@@ -5,6 +5,191 @@ import { getProductById, listProducts } from "./product.service";
 
 const productRouter = Router();
 
+/**
+ * @openapi
+ * /v1/products:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: List products
+ *     description: >
+ *       Returns a paginated list of mock products. Supports filtering,
+ *       text search, and sorting. This endpoint does not modify data.
+ *       The minPrice value must not exceed maxPrice when both are provided.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of products per page.
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *         description: Filter products by category ID.
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *         description: Minimum product price, inclusive.
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *         description: Maximum product price, inclusive.
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *         description: Search product titles, descriptions, brands, and tags.
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - price
+ *             - title
+ *             - rating
+ *             - id
+ *           default: id
+ *         description: Field used to sort the products.
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - asc
+ *             - desc
+ *           default: asc
+ *         description: Sort direction.
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - success
+ *                 - data
+ *                 - meta
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: prod_headphones
+ *                       title:
+ *                         type: string
+ *                         example: Wireless Headphones
+ *                       description:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                         example: 79.99
+ *                       currency:
+ *                         type: string
+ *                         example: USD
+ *                       categoryId:
+ *                         type: string
+ *                         example: cat_electronics
+ *                       brand:
+ *                         type: string
+ *                         nullable: true
+ *                       rating:
+ *                         type: object
+ *                         properties:
+ *                           average:
+ *                             type: number
+ *                           count:
+ *                             type: integer
+ *                       stock:
+ *                         type: integer
+ *                       thumbnail:
+ *                         type: string
+ *                         format: uri
+ *                       images:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           format: uri
+ *                       tags:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                 meta:
+ *                   type: object
+ *                   required:
+ *                     - total
+ *                     - page
+ *                     - limit
+ *                     - totalPages
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 8
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 20
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Invalid query parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - success
+ *                 - error
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                       example: VALIDATION_ERROR
+ *                     message:
+ *                       type: string
+ *                       example: Invalid product query parameters.
+ *                     details:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           path:
+ *                             type: string
+ *                           message:
+ *                             type: string
+ */
 const listProductsQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
@@ -73,6 +258,135 @@ productRouter.get("/", async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /v1/products/{id}:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get a product by ID
+ *     description: Returns a single mock product without modifying data.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^prod_[a-zA-Z0-9_-]+$'
+ *         description: Product identifier, such as prod_headphones.
+ *     responses:
+ *       200:
+ *         description: Product retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - success
+ *                 - data
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   description: The requested product.
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: prod_headphones
+ *                     title:
+ *                       type: string
+ *                       example: Wireless Headphones
+ *                     description:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *                       example: 79.99
+ *                     currency:
+ *                       type: string
+ *                       example: USD
+ *                     categoryId:
+ *                       type: string
+ *                       example: cat_electronics
+ *                     brand:
+ *                       type: string
+ *                       nullable: true
+ *                     rating:
+ *                       type: object
+ *                       properties:
+ *                         average:
+ *                           type: number
+ *                         count:
+ *                           type: integer
+ *                     stock:
+ *                       type: integer
+ *                     thumbnail:
+ *                       type: string
+ *                       format: uri
+ *                     images:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                         format: uri
+ *                     tags:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: Invalid product ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - success
+ *                 - error
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                       example: VALIDATION_ERROR
+ *                     message:
+ *                       type: string
+ *                       example: Invalid product ID.
+ *                     details:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           path:
+ *                             type: string
+ *                           message:
+ *                             type: string
+ *       404:
+ *         description: Product not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - success
+ *                 - error
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                       example: PRODUCT_NOT_FOUND
+ *                     message:
+ *                       type: string
+ *                       example: The requested product was not found.
+ */
 productRouter.get("/:id", async (req, res, next) => {
   try {
     const idSchema = z
