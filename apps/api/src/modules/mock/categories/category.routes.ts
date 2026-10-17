@@ -16,6 +16,34 @@ const categoryQuerySchema = z.object({
   parentId: z.union([categoryIdSchema, z.literal("null")]).optional(),
 });
 
+/**
+ * @openapi
+ * /v1/categories:
+ *   get:
+ *     tags:
+ *       - Categories
+ *     summary: List product categories
+ *     description: Returns active categories, with optional search and parent filtering.
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *           maxLength: 100
+ *         description: Search categories by name.
+ *       - in: query
+ *         name: parentId
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter by parent category ID. Use the literal "null" for root categories.
+ *     responses:
+ *       200:
+ *         description: Categories retrieved successfully.
+ *       400:
+ *         description: Invalid query parameters.
+ */
 categoryRouter.get("/", async (req, res, next) => {
   try {
     const query = categoryQuerySchema.parse(req.query);
@@ -44,6 +72,28 @@ categoryRouter.get("/", async (req, res, next) => {
   }
 });
 
+/**
+ * @openapi
+ * /v1/categories/{id}:
+ *   get:
+ *     tags:
+ *       - Categories
+ *     summary: Get a product category by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Stable public category ID.
+ *     responses:
+ *       200:
+ *         description: Category retrieved successfully.
+ *       400:
+ *         description: Invalid category ID.
+ *       404:
+ *         description: Category not found.
+ */
 categoryRouter.get("/:id", async (req, res, next) => {
   try {
     const id = categoryIdSchema.parse(req.params.id);
