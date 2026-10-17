@@ -83,112 +83,13 @@ const productRouter = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - success
- *                 - data
- *                 - meta
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: prod_headphones
- *                       title:
- *                         type: string
- *                         example: Wireless Headphones
- *                       description:
- *                         type: string
- *                       price:
- *                         type: number
- *                         example: 79.99
- *                       currency:
- *                         type: string
- *                         example: USD
- *                       categoryId:
- *                         type: string
- *                         example: cat_electronics
- *                       brand:
- *                         type: string
- *                         nullable: true
- *                       rating:
- *                         type: object
- *                         properties:
- *                           average:
- *                             type: number
- *                           count:
- *                             type: integer
- *                       stock:
- *                         type: integer
- *                       thumbnail:
- *                         type: string
- *                         format: uri
- *                       images:
- *                         type: array
- *                         items:
- *                           type: string
- *                           format: uri
- *                       tags:
- *                         type: array
- *                         items:
- *                           type: string
- *                 meta:
- *                   type: object
- *                   required:
- *                     - total
- *                     - page
- *                     - limit
- *                     - totalPages
- *                   properties:
- *                     total:
- *                       type: integer
- *                       example: 8
- *                     page:
- *                       type: integer
- *                       example: 1
- *                     limit:
- *                       type: integer
- *                       example: 20
- *                     totalPages:
- *                       type: integer
- *                       example: 1
+ *               $ref: "#/components/schemas/ProductListResponse"
  *       400:
  *         description: Invalid query parameters.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - success
- *                 - error
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: object
- *                   properties:
- *                     code:
- *                       type: string
- *                       example: VALIDATION_ERROR
- *                     message:
- *                       type: string
- *                       example: Invalid product query parameters.
- *                     details:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           path:
- *                             type: string
- *                           message:
- *                             type: string
+ *               $ref: "#/components/schemas/ApiError"
  */
 const listProductsQuerySchema = z
   .object({
@@ -280,112 +181,19 @@ productRouter.get("/", async (req, res, next) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - success
- *                 - data
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   description: The requested product.
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: prod_headphones
- *                     title:
- *                       type: string
- *                       example: Wireless Headphones
- *                     description:
- *                       type: string
- *                     price:
- *                       type: number
- *                       example: 79.99
- *                     currency:
- *                       type: string
- *                       example: USD
- *                     categoryId:
- *                       type: string
- *                       example: cat_electronics
- *                     brand:
- *                       type: string
- *                       nullable: true
- *                     rating:
- *                       type: object
- *                       properties:
- *                         average:
- *                           type: number
- *                         count:
- *                           type: integer
- *                     stock:
- *                       type: integer
- *                     thumbnail:
- *                       type: string
- *                       format: uri
- *                     images:
- *                       type: array
- *                       items:
- *                         type: string
- *                         format: uri
- *                     tags:
- *                       type: array
- *                       items:
- *                         type: string
+ *               $ref: "#/components/schemas/ProductResponse"
  *       400:
  *         description: Invalid product ID.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - success
- *                 - error
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: object
- *                   properties:
- *                     code:
- *                       type: string
- *                       example: VALIDATION_ERROR
- *                     message:
- *                       type: string
- *                       example: Invalid product ID.
- *                     details:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           path:
- *                             type: string
- *                           message:
- *                             type: string
+ *               $ref: "#/components/schemas/ApiError"
  *       404:
  *         description: Product not found.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - success
- *                 - error
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: object
- *                   properties:
- *                     code:
- *                       type: string
- *                       example: PRODUCT_NOT_FOUND
- *                     message:
- *                       type: string
- *                       example: The requested product was not found.
+ *               $ref: "#/components/schemas/ApiError"
  */
 productRouter.get("/:id", async (req, res, next) => {
   try {

@@ -12,7 +12,6 @@ const categoryRouter = Router();
 
 const categoryQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
-
   parentId: z.union([categoryIdSchema, z.literal("null")]).optional(),
 });
 
@@ -41,8 +40,28 @@ const categoryQuerySchema = z.object({
  *     responses:
  *       200:
  *         description: Categories retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/CategoryListResponse"
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: cat_electronics
+ *                   name: Electronics
+ *                   slug: electronics
+ *                   description: Electronic devices and accessories.
+ *                   parentId: null
+ *                   image: null
+ *                   isActive: true
+ *               meta:
+ *                 total: 1
  *       400:
  *         description: Invalid query parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiError"
  */
 categoryRouter.get("/", async (req, res, next) => {
   try {
@@ -85,14 +104,42 @@ categoryRouter.get("/", async (req, res, next) => {
  *         required: true
  *         schema:
  *           type: string
+ *           pattern: '^cat_[a-zA-Z0-9_-]+$'
  *         description: Stable public category ID.
  *     responses:
  *       200:
  *         description: Category retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/CategoryResponse"
+ *             example:
+ *               success: true
+ *               data:
+ *                 id: cat_electronics
+ *                 name: Electronics
+ *                 slug: electronics
+ *                 description: Electronic devices and accessories.
+ *                 parentId: null
+ *                 image: null
+ *                 isActive: true
  *       400:
  *         description: Invalid category ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiError"
  *       404:
  *         description: Category not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ApiError"
+ *             example:
+ *               success: false
+ *               error:
+ *                 code: CATEGORY_NOT_FOUND
+ *                 message: The requested category was not found.
  */
 categoryRouter.get("/:id", async (req, res, next) => {
   try {
