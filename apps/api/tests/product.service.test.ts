@@ -87,6 +87,33 @@ describe("Product service", () => {
     expect(result.totalPages).toBe(2);
   });
 
+  it("returns the correct products on the second page", async () => {
+    const result = await listProducts({
+      page: 2,
+      limit: 2,
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_watch",
+    ]);
+    expect(result.total).toBe(3);
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(2);
+    expect(result.totalPages).toBe(2);
+  });
+
+  it("returns an empty product list for a page beyond the available results", async () => {
+    const result = await listProducts({
+      page: 5,
+      limit: 2,
+    });
+
+    expect(result.products).toEqual([]);
+    expect(result.total).toBe(3);
+    expect(result.page).toBe(5);
+    expect(result.totalPages).toBe(2);
+  });
+
   it("filters products by category", async () => {
     const result = await listProducts({
       categoryId: "cat_electronics",
@@ -100,6 +127,16 @@ describe("Product service", () => {
     ).toBe(true);
   });
 
+  it("returns no products for a category with no matches", async () => {
+    const result = await listProducts({
+      categoryId: "cat_missing",
+    });
+
+    expect(result.products).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.totalPages).toBe(0);
+  });
+
   it("filters products by minimum and maximum price", async () => {
     const result = await listProducts({
       minPrice: 20,
@@ -110,6 +147,39 @@ describe("Product service", () => {
     expect(result.products[0]?.id).toBe("prod_headphones");
   });
 
+  it("filters products by minimum price only", async () => {
+    const result = await listProducts({
+      minPrice: 80,
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_watch",
+    ]);
+    expect(result.total).toBe(1);
+  });
+
+  it("filters products by maximum price only", async () => {
+    const result = await listProducts({
+      maxPrice: 20,
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_shirt",
+    ]);
+    expect(result.total).toBe(1);
+  });
+
+  it("returns no products when the price range matches nothing", async () => {
+    const result = await listProducts({
+      minPrice: 200,
+      maxPrice: 300,
+    });
+
+    expect(result.products).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.totalPages).toBe(0);
+  });
+
   it("searches product titles and descriptions", async () => {
     const result = await listProducts({
       search: "headphones",
@@ -117,6 +187,61 @@ describe("Product service", () => {
 
     expect(result.total).toBe(1);
     expect(result.products[0]?.id).toBe("prod_headphones");
+  });
+
+  it("searches case-insensitively", async () => {
+    const result = await listProducts({
+      search: "WIRELESS",
+    });
+
+    expect(result.total).toBe(1);
+    expect(result.products[0]?.id).toBe("prod_headphones");
+  });
+
+  it("searches product brands", async () => {
+    const result = await listProducts({
+      search: "techfit",
+    });
+
+    expect(result.total).toBe(1);
+    expect(result.products[0]?.id).toBe("prod_watch");
+  });
+
+  it("searches product tags", async () => {
+    const result = await listProducts({
+      search: "fitness",
+    });
+
+    expect(result.total).toBe(1);
+    expect(result.products[0]?.id).toBe("prod_watch");
+  });
+
+  it("treats regex metacharacters in search input literally", async () => {
+    const result = await listProducts({
+      search: ".*",
+    });
+
+    expect(result.products).toEqual([]);
+    expect(result.total).toBe(0);
+  });
+
+  it("returns no products for a search with no matches", async () => {
+    const result = await listProducts({
+      search: "product-that-does-not-exist",
+    });
+
+    expect(result.products).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.totalPages).toBe(0);
+  });
+
+  it("treats whitespace-only search input as no search filter", async () => {
+    const result = await listProducts({
+      search: "   ",
+    });
+
+    expect(result.total).toBe(3);
+    expect(result.products).toHaveLength(3);
   });
 
   it("sorts products by title in ascending order", async () => {
@@ -166,6 +291,23 @@ describe("Product service", () => {
       "prod_shirt",
       "prod_watch",
     ]);
+  });
+
+  it("uses product ID as a stable tie-breaker for equal prices", async () => {
+    await Product.updateOne({ id: "prod_watch" }, { $set: { price: 79.99 } });
+
+    const result = await listProducts({
+      sortBy: "price",
+      order: "asc",
+    });
+
+    expect(result.products.map((product) => product.id)).toEqual([
+      "prod_shirt",
+      "prod_headphones",
+      "prod_watch",
+    ]);
+
+    expect(result.products[1].price).toBe(result.products[2].price);
   });
 
   it("returns a product by ID", async () => {
