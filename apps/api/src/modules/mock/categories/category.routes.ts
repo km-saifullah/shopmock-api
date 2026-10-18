@@ -9,6 +9,7 @@ import {
 } from "./category.schema";
 
 const categoryRouter = Router();
+const MAX_CATEGORY_LIST_LIMIT = 100;
 
 const categoryQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
@@ -22,7 +23,7 @@ const categoryQuerySchema = z.object({
  *     tags:
  *       - Categories
  *     summary: List product categories
- *     description: Returns active categories, with optional search and parent filtering.
+ *     description: Returns up to 100 active categories, with optional search and parent filtering.
  *     parameters:
  *       - in: query
  *         name: search
@@ -39,7 +40,7 @@ const categoryQuerySchema = z.object({
  *         description: Filter by parent category ID. Use the literal "null" for root categories.
  *     responses:
  *       200:
- *         description: Categories retrieved successfully.
+ *         description: Categories retrieved successfully. The response contains at most 100 categories; meta.total reports all matching categories.
  *         content:
  *           application/json:
  *             schema:
@@ -69,6 +70,7 @@ categoryRouter.get("/", async (req, res, next) => {
 
     const result = await listCategories({
       activeOnly: true,
+      limit: MAX_CATEGORY_LIST_LIMIT,
       ...(query.search ? { search: query.search } : {}),
       ...(query.parentId !== undefined
         ? {

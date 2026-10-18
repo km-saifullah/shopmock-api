@@ -95,6 +95,14 @@ describe("Product routes", () => {
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("rejects an excessively large page number", async () => {
+    const response = await request(app).get("/v1/products?page=10001");
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("rejects a zero product limit", async () => {
     const response = await request(app).get("/v1/products?limit=0");
 

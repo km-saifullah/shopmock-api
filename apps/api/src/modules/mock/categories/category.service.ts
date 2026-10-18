@@ -4,10 +4,13 @@ import { Category } from "./category.model";
 import type { CategoryDocument } from "./category.model";
 import type { CategoryResponse } from "./category.schema";
 
+const MAX_CATEGORY_LIST_LIMIT = 100;
+
 export interface ListCategoriesOptions {
   activeOnly?: boolean;
   parentId?: string | null;
   search?: string;
+  limit?: number;
 }
 
 export async function listCategories(
@@ -34,10 +37,17 @@ export async function listCategories(
     ];
   }
 
+  const requestedLimit = options.limit ?? MAX_CATEGORY_LIST_LIMIT;
+  const limit = Math.max(
+    1,
+    Math.min(Math.trunc(requestedLimit), MAX_CATEGORY_LIST_LIMIT),
+  );
+
   const [documents, total] = await Promise.all([
     Category.find(filter)
       .select("-_id id name slug description parentId image isActive")
       .sort({ name: 1, id: 1 })
+      .limit(limit)
       .lean()
       .exec(),
 

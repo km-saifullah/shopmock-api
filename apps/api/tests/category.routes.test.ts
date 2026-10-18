@@ -58,6 +58,32 @@ describe("Category routes", () => {
     expect(response.body.meta.total).toBe(2);
   });
 
+  it("limits the public category response to 100 items", async () => {
+    const categories = Array.from({ length: 105 }, (_, index) => {
+      const number = index + 1;
+      const suffix = String(number).padStart(3, "0");
+
+      return {
+        id: `cat_test_${suffix}`,
+        name: `Test Category ${suffix}`,
+        slug: `test-category-${suffix}`,
+        description: `Test category ${suffix}.`,
+        parentId: null,
+        image: null,
+        isActive: true,
+      };
+    });
+
+    await Category.insertMany(categories);
+
+    const response = await request(app).get("/v1/categories");
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toHaveLength(100);
+    expect(response.body.meta.total).toBe(107);
+  });
+
   it("filters categories by search text", async () => {
     const response = await request(app).get(
       "/v1/categories?search=electronics",

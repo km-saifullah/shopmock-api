@@ -63,6 +63,15 @@ describe("Category service", () => {
     ]);
   });
 
+  it("limits returned categories while preserving the total count", async () => {
+    const result = await listCategories({
+      limit: 1,
+    });
+
+    expect(result.categories).toHaveLength(1);
+    expect(result.total).toBe(2);
+  });
+
   it("filters categories by parent ID", async () => {
     const result = await listCategories({
       parentId: null,

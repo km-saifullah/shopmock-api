@@ -6,6 +6,8 @@ import { productIdSchema } from "./product.schema";
 
 const productRouter = Router();
 
+const MAX_PRODUCT_PAGE = 10_000;
+
 /**
  * @openapi
  * /v1/products:
@@ -23,8 +25,9 @@ const productRouter = Router();
  *         schema:
  *           type: integer
  *           minimum: 1
+ *           maximum: 10000
  *           default: 1
- *         description: Page number.
+ *         description: Page number. Maximum 10000.
  *       - in: query
  *         name: limit
  *         schema:
@@ -94,7 +97,7 @@ const productRouter = Router();
  */
 const listProductsQuerySchema = z
   .object({
-    page: z.coerce.number().int().min(1).default(1),
+    page: z.coerce.number().int().min(1).max(MAX_PRODUCT_PAGE).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     categoryId: z.string().trim().min(1).optional(),
     minPrice: z.coerce.number().min(0).optional(),
