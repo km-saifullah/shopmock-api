@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { ZodError, z } from "zod";
+import { z } from "zod";
 
 import { getProductById, listProducts } from "./product.service";
+import { productIdSchema } from "./product.schema";
 
 const productRouter = Router();
 
@@ -138,23 +139,7 @@ productRouter.get("/", async (req, res, next) => {
         totalPages: result.totalPages,
       },
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid product query parameters.",
-          details: error.issues.map((issue) => ({
-            path: issue.path.join("."),
-            message: issue.message,
-          })),
-        },
-      });
-
-      return;
-    }
-
+  } catch (error: unknown) {
     next(error);
   }
 });
@@ -197,12 +182,7 @@ productRouter.get("/", async (req, res, next) => {
  */
 productRouter.get("/:id", async (req, res, next) => {
   try {
-    const idSchema = z
-      .string()
-      .trim()
-      .regex(/^prod_[a-zA-Z0-9_-]+$/);
-    const id = idSchema.parse(req.params.id);
-
+    const id = productIdSchema.parse(req.params.id.trim());
     const product = await getProductById(id);
 
     if (!product) {
@@ -221,23 +201,7 @@ productRouter.get("/:id", async (req, res, next) => {
       success: true,
       data: product,
     });
-  } catch (error) {
-    if (error instanceof ZodError) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid product ID.",
-          details: error.issues.map((issue) => ({
-            path: issue.path.join("."),
-            message: issue.message,
-          })),
-        },
-      });
-
-      return;
-    }
-
+  } catch (error: unknown) {
     next(error);
   }
 });
