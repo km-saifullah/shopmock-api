@@ -2,6 +2,8 @@ import path from "node:path";
 
 import swaggerJsdoc from "swagger-jsdoc";
 
+import { env } from "./env";
+
 const sourceRoutes = path.resolve(process.cwd(), "src/modules/**/*.routes.ts");
 
 const compiledRoutes = path.resolve(
@@ -344,4 +346,30 @@ const openApiOptions: swaggerJsdoc.Options = {
   failOnErrors: true,
 };
 
-export const openApiSpecification = swaggerJsdoc(openApiOptions);
+const generatedOpenApiSpecification = swaggerJsdoc(openApiOptions) as {
+  paths?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+const apiPrefix = env.API_PREFIX.replace(/\/+$/, "");
+
+const normalizedPaths = Object.fromEntries(
+  Object.entries(generatedOpenApiSpecification.paths ?? {}).map(
+    ([routePath, pathItem]) => {
+      if (routePath === "/v1") {
+        return [apiPrefix || "/", pathItem];
+      }
+
+      if (routePath.startsWith("/v1/")) {
+        return [`${apiPrefix}${routePath.slice(3)}`, pathItem];
+      }
+
+      return [routePath, pathItem];
+    },
+  ),
+);
+
+export const openApiSpecification = {
+  ...generatedOpenApiSpecification,
+  paths: normalizedPaths,
+};
